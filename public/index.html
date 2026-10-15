@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mesa de ayuda</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--tinta:#1d2a30;--papel:#f3f5f4;--panel:#fff;--teal:#0f4c5c;--linea:#d5dcda;--alta:#b3412e;--media:#c98a1b;--baja:#3f7d5c}
+*{box-sizing:border-box}
+body{margin:0;font-family:"IBM Plex Sans",Arial,sans-serif;background:var(--papel);color:var(--tinta);line-height:1.5}
+input,select,button{font:inherit}
+input,select{padding:9px 10px;border:1px solid var(--linea);border-radius:6px;background:#fff;min-width:0}
+input:focus,select:focus,button:focus-visible{outline:2px solid var(--teal);outline-offset:1px}
+button{padding:9px 16px;border:0;border-radius:6px;background:var(--teal);color:#fff;cursor:pointer;font-weight:500}
+button.sec{background:none;color:var(--tinta);border:1px solid var(--linea)}
+button.del{background:none;color:var(--alta);padding:4px 8px}
+#login{max-width:340px;margin:12vh auto;padding:28px;background:var(--panel);border:1px solid var(--linea);border-radius:10px;display:flex;flex-direction:column;gap:10px}
+#login h1{margin:0 0 4px;font-size:1.5rem}
+#login p{margin:0 0 6px;color:#5b6b70}
+header{background:var(--teal);color:#fff;padding:14px 24px;display:flex;justify-content:space-between;align-items:center;gap:12px}
+header h1{margin:0;font-size:1.2rem}
+header button{background:rgba(255,255,255,.15)}
+nav{display:flex;gap:4px;padding:12px 24px 0;border-bottom:1px solid var(--linea);background:var(--panel)}
+nav button{background:none;color:var(--tinta);border-radius:6px 6px 0 0;border-bottom:3px solid transparent}
+nav button.on{border-bottom-color:var(--teal);color:var(--teal);font-weight:600}
+main{max-width:820px;margin:0 auto;padding:20px}
+.form{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:20px}
+.form input[type=text]{flex:2 1 200px}
+.form select{flex:1 1 120px}
+.item{background:var(--panel);border:1px solid var(--linea);border-left:5px solid var(--media);border-radius:8px;padding:14px;margin-bottom:12px}
+.item.alta{border-left-color:var(--alta)}.item.baja{border-left-color:var(--baja)}
+.fila{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+.item p{margin:6px 0}.meta{font-size:.85rem;color:#5b6b70}
+.coms{margin:10px 0;padding-left:10px;border-left:2px solid var(--linea);font-size:.92rem}
+.tarea{display:flex;align-items:center;gap:10px}
+.tarea.ok span{text-decoration:line-through;color:#7d8b8f}
+.vacio{color:#5b6b70;text-align:center;padding:24px}
+.oculto{display:none!important}
+.chat{display:flex;border:1px solid var(--linea);border-radius:8px;background:var(--panel);height:62vh;overflow:hidden}
+.chat-lado{width:30%;min-width:130px;border-right:1px solid var(--linea);overflow-y:auto}
+.chat-lado div{padding:12px;cursor:pointer;border-bottom:1px solid var(--linea)}
+.chat-lado div.on{background:#e3eeee;font-weight:600}
+.chat-main{flex:1;display:flex;flex-direction:column;min-width:0}
+.chat-tit{padding:12px;border-bottom:1px solid var(--linea);font-weight:600}
+#msgs{flex:1;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:8px}
+.msg{max-width:70%;padding:8px 12px;border-radius:10px;background:#eef1f0;align-self:flex-start;word-break:break-word}
+.msg.mio{background:#d3e9e7;align-self:flex-end}
+.msg small{display:block;color:#5b6b70}
+.chat-in{display:flex;gap:8px;padding:10px;border-top:1px solid var(--linea)}
+.chat-in input{flex:1}
+</style>
+</head>
+<body>
+
+<div id="login">
+  <h1>Mesa de ayuda</h1>
+  <p>Gestiona tickets y tareas de tu equipo.</p>
+  <input id="user" placeholder="Usuario" autocomplete="username">
+  <input id="pass" type="password" placeholder="Contraseña" autocomplete="current-password">
+  <button onclick="acceso('login')">Entrar</button>
+  <button class="sec" onclick="acceso('registro')">Crear cuenta</button>
+</div>
+
+<div id="app" class="oculto">
+  <header><h1>Mesa de ayuda</h1><div>👤 <span id="me"></span> <button onclick="salir()">Salir</button></div></header>
+  <nav>
+    <button id="t-tickets" class="on" onclick="ver('tickets')">Tickets</button>
+    <button id="t-tareas" onclick="ver('tareas')">Mis tareas</button>
+    <button id="t-chat" onclick="ver('chat')">Chat</button>
+  </nav>
+  <main>
+    <section id="v-tickets">
+      <div class="form">
+        <input type="text" id="tk-titulo" placeholder="Título del ticket">
+        <input type="text" id="tk-desc" placeholder="Descripción">
+        <select id="tk-prio"><option value="baja">Baja</option><option value="media" selected>Media</option><option value="alta">Alta</option></select>
+        <button onclick="crearTicket()">Crear ticket</button>
+      </div>
+      <div id="lista-tickets"></div>
+    </section>
+    <section id="v-tareas" class="oculto">
+      <div class="form">
+        <input type="text" id="ta-titulo" placeholder="Nueva tarea">
+        <select id="ta-ticket"></select>
+        <button onclick="crearTarea()">Agregar tarea</button>
+      </div>
+      <div id="lista-tareas"></div>
+    </section>
+    <section id="v-chat" class="oculto">
+      <div class="chat">
+        <div class="chat-lado" id="chat-usuarios"></div>
+        <div class="chat-main">
+          <div class="chat-tit" id="chat-tit">🌍 Chat global</div>
+          <div id="msgs"></div>
+          <div class="chat-in"><input id="msg-in" placeholder="Escribe un mensaje"><button onclick="enviarMsg()">Enviar</button></div>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+let token = localStorage.getItem("token"), me = localStorage.getItem("me"), tickets = [];
+
+async function api(url, method = "GET", body) {
+  const r = await fetch("/api" + url, {
+    method,
+    headers: { "Content-Type": "application/json", ...(token && { Authorization: "Bearer " + token }) },
+    body: body && JSON.stringify(body)
+  });
+  const d = await r.json().catch(() => ({}));
+  if (r.status === 401 && token) salir();
+  if (!r.ok) throw new Error(d.error || "Error inesperado");
+  return d;
+}
+const intentar = async fn => { try { await fn(); } catch (e) { alert(e.message); } };
+
+function acceso(tipo) {
+  intentar(async () => {
+    const d = await api("/" + tipo, "POST", { username: $("user").value, password: $("pass").value });
+    if (tipo === "registro") return alert("Cuenta creada. Ahora puedes entrar.");
+    token = d.token; me = d.username;
+    localStorage.setItem("token", token); localStorage.setItem("me", me);
+    iniciar();
+  });
+}
+function salir() { localStorage.clear(); token = me = null; location.reload(); }
+function iniciar() {
+  $("login").classList.add("oculto"); $("app").classList.remove("oculto");
+  $("me").textContent = me; cargarTickets().then(cargarTareas);
+}
+function ver(v) {
+  ["tickets", "tareas", "chat"].forEach(x => {
+    $("v-" + x).classList.toggle("oculto", x !== v);
+    $("t-" + x).classList.toggle("on", x === v);
+  });
+  if (v === "chat") { cargarUsuarios(); cargarMsgs(true); }
+}
+
+// CHAT
+let chatCon = null;
+async function cargarUsuarios() {
+  const u = await api("/usuarios");
+  $("chat-usuarios").innerHTML = `<div class="${chatCon === null ? "on" : ""}" onclick="abrirChat(null)">🌍 Chat global</div>` +
+    u.filter(x => x.username !== me).map(x => `<div class="${chatCon === x.username ? "on" : ""}" data-u="${esc(x.username)}" onclick="abrirChat(this.dataset.u)">👤 ${esc(x.username)}</div>`).join("");
+}
+function abrirChat(u) {
+  chatCon = u;
+  $("chat-tit").textContent = u ? "Chat con " + u : "🌍 Chat global";
+  cargarUsuarios(); cargarMsgs(true);
+}
+async function cargarMsgs(bajar) {
+  const m = await api("/mensajes" + (chatCon ? "?con=" + encodeURIComponent(chatCon) : ""));
+  const box = $("msgs");
+  const abajo = bajar || box.scrollTop + box.clientHeight >= box.scrollHeight - 40;
+  box.innerHTML = m.map(x => `<div class="msg ${x.de === me ? "mio" : ""}"><small>${esc(x.de)}</small>${esc(x.mensaje)}</div>`).join("") || '<p class="vacio">Aún no hay mensajes.</p>';
+  if (abajo) box.scrollTop = box.scrollHeight;
+}
+const enviarMsg = () => intentar(async () => {
+  const t = $("msg-in").value.trim(); if (!t) return;
+  await api("/mensajes", "POST", { para: chatCon, mensaje: t });
+  $("msg-in").value = ""; await cargarMsgs(true);
+});
+$("msg-in").addEventListener("keydown", e => e.key === "Enter" && enviarMsg());
+setInterval(() => { if (token && !$("v-chat").classList.contains("oculto")) cargarMsgs().catch(() => {}); }, 3000);
+
+// TICKETS
+async function cargarTickets() {
+  tickets = await api("/tickets");
+  $("ta-ticket").innerHTML = '<option value="">Sin ticket</option>' + tickets.map(t => `<option value="${t._id}">${esc(t.titulo)}</option>`).join("");
+  $("lista-tickets").innerHTML = tickets.map(t => `
+    <div class="item ${t.prioridad}">
+      <div class="fila"><b>${esc(t.titulo)}</b><span class="meta">Prioridad ${t.prioridad}</span></div>
+      <p>${esc(t.descripcion)}</p>
+      <div class="fila">
+        <span class="meta">Creado por ${esc(t.creador)}</span>
+        <span>
+          <select onchange="cambiarEstado('${t._id}', this.value)">
+            ${["abierto", "en_proceso", "cerrado"].map(e => `<option value="${e}" ${e === t.estado ? "selected" : ""}>${e.replace("_", " ")}</option>`).join("")}
+          </select>
+          ${t.creador === me ? `<button class="del" onclick="borrarTicket('${t._id}')">Eliminar</button>` : ""}
+        </span>
+      </div>
+      <div class="coms">${t.comentarios.map(c => `<div><b>${esc(c.autor)}:</b> ${esc(c.texto)}</div>`).join("") || '<span class="meta">Sin comentarios</span>'}</div>
+      <div class="fila"><input id="c-${t._id}" placeholder="Escribe un comentario" style="flex:1"><button class="sec" onclick="comentar('${t._id}')">Comentar</button></div>
+    </div>`).join("") || '<p class="vacio">Aún no hay tickets. Crea el primero arriba.</p>';
+}
+const crearTicket = () => intentar(async () => {
+  await api("/tickets", "POST", { titulo: $("tk-titulo").value, descripcion: $("tk-desc").value, prioridad: $("tk-prio").value });
+  $("tk-titulo").value = $("tk-desc").value = ""; await cargarTickets();
+});
+const cambiarEstado = (id, estado) => intentar(async () => { await api("/tickets/" + id, "PUT", { estado }); await cargarTickets(); });
+const borrarTicket = id => confirm("¿Eliminar este ticket?") && intentar(async () => { await api("/tickets/" + id, "DELETE"); await cargarTickets(); await cargarTareas(); });
+const comentar = id => intentar(async () => {
+  await api(`/tickets/${id}/comentarios`, "POST", { texto: $("c-" + id).value }); await cargarTickets();
+});
+
+// TAREAS
+async function cargarTareas() {
+  const tareas = await api("/tareas");
+  $("lista-tareas").innerHTML = tareas.map(t => `
+    <div class="item"><div class="fila">
+      <label class="tarea ${t.completada ? "ok" : ""}">
+        <input type="checkbox" ${t.completada ? "checked" : ""} onchange="marcar('${t._id}', this.checked)">
+        <span>${esc(t.titulo)}${t.ticket ? ` <small class="meta">(Ticket: ${esc(t.ticket.titulo)})</small>` : ""}</span>
+      </label>
+      <button class="del" onclick="borrarTarea('${t._id}')">Eliminar</button>
+    </div></div>`).join("") || '<p class="vacio">No tienes tareas. Agrega una arriba.</p>';
+}
+const crearTarea = () => intentar(async () => {
+  await api("/tareas", "POST", { titulo: $("ta-titulo").value, ticket: $("ta-ticket").value });
+  $("ta-titulo").value = ""; await cargarTareas();
+});
+const marcar = (id, completada) => intentar(async () => { await api("/tareas/" + id, "PUT", { completada }); await cargarTareas(); });
+const borrarTarea = id => intentar(async () => { await api("/tareas/" + id, "DELETE"); await cargarTareas(); });
+
+$("pass").addEventListener("keydown", e => e.key === "Enter" && acceso("login"));
+if (token) iniciar();
+</script>
+</body>
+</html>
